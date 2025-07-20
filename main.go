@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"image/color"
 	"log"
@@ -9,7 +10,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 )
 
 const (
@@ -22,12 +24,33 @@ const (
 	GridWidth = GridSquaresWidth*SquareSize
 	GridHeight = GridSquaresHeight*SquareSize
 
-	GridHeightOffset = SquareSize*1
+	GridHeightOffset = SquareSize*2
 	GridWidthOffset = SquareSize*0
 
 	ScreenWidth = GridWidth + GridWidthOffset
 	ScreenHeight = GridHeight + GridHeightOffset
 )
+
+//go:embed assets/Bitcount-Regular.ttf
+var fontBytes []byte
+
+var fontFace font.Face
+
+func loadFont() font.Face {
+	tt, err := opentype.Parse(fontBytes); 
+	if err != nil {
+		log.Fatal(err)
+	}
+	face, err := opentype.NewFace(tt, &opentype.FaceOptions{
+		Size: 36,
+		DPI: 72,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return face
+}
 
 var Colors = map[uint8]color.Color{
 	0: color.Black, 
@@ -99,7 +122,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.Black)
+	screen.Fill(color.Gray{30})
 	for y, col := range g.Board {
 		for x, value := range col {
 			if ViewGrid {
@@ -109,7 +132,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
-	text.Draw(screen, "Score: " + fmt.Sprint(len(g.Body)-1), basicfont.Face7x13, SquareSize, SquareSize, color.White)
+	text.Draw(screen, "Score: " + fmt.Sprint(len(g.Body)-1), fontFace, SquareSize, SquareSize*1.5, color.White)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -120,8 +143,9 @@ func main() {
 	game := &Game{}
 	ebiten.SetWindowSize(ScreenWidth, ScreenHeight)
 	ebiten.SetWindowTitle("Snake")
-	game.Body = append(game.Body, Position{X: ScreenWidth/SquareSize/2, Y: ScreenHeight/SquareSize/2})
-	game.Board[ScreenHeight/SquareSize/2][ScreenWidth/SquareSize/2] = 1
+	fontFace = loadFont()
+	game.Body = append(game.Body, Position{X: GridWidth/SquareSize/2, Y: GridHeight/SquareSize/2})
+	game.Board[GridHeight/SquareSize/2][GridWidth/SquareSize/2] = 1
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
