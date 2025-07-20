@@ -9,66 +9,58 @@ import (
 )
 
 type Game struct{
-	Snake
-	Board [][]uint8
-	LastTick time.Time
-	Status bool
-	HighScore uint
+	snake
+	board [][]uint8
+	lastTick time.Time
+	status bool
+	highScore uint
 	Cfg *config.Config
 	FontFace font.Face
 }
 
-type Snake struct{
-	Body []Position
-	Dir Position
+type snake struct{
+	body []position
+	dir position
 }
 
-type Position struct {
+type position struct {
 	X, Y float32
 }
 
-func (g *Game) Tick() {
-	head := g.Body[0]
-	if !(g.Dir.X == 0 && g.Dir.Y == 0) {
-		newHead := Position{X: head.X + g.Dir.X, Y: head.Y + g.Dir.Y}
+func (g *Game) tick() {
+	head := g.body[0]
+	if !(g.dir.X == 0 && g.dir.Y == 0) {
+		newHead := position{X: head.X + g.dir.X, Y: head.Y + g.dir.Y}
 		
 		if g.Cfg.GridSquaresHeight <= int(newHead.Y) || newHead.Y < 0 || g.Cfg.GridSquaresWidth <= int(newHead.X) || newHead.X < 0 {
-			g.Status = false
+			g.status = false
 			return
 		}
 
-		positionValue := &g.Board[int(newHead.Y)][int(newHead.X)]
-
-		/* Debug Prints
-		fmt.Print(newHead)
-		fmt.Print(" ")
-		fmt.Print(head)
-		fmt.Print(" ")
-		fmt.Println(positionValue)
-		*/
+		positionValue := &g.board[int(newHead.Y)][int(newHead.X)]
 
 		switch *positionValue {
 		case 0:
-			g.Body = append([]Position{newHead}, g.Body...)
-			tail := g.Body[len(g.Body)-1]
-			g.Body = g.Body[:len(g.Body)-1]
+			g.body = append([]position{newHead}, g.body...)
+			tail := g.body[len(g.body)-1]
+			g.body = g.body[:len(g.body)-1]
 			*positionValue = 1
-			g.Board[int(tail.Y)][int(tail.X)] = 0
+			g.board[int(tail.Y)][int(tail.X)] = 0
 		case 1:
 			// end game
-			g.Status = false
+			g.status = false
 		case 2:
-			g.Body = append([]Position{newHead}, g.Body...)
+			g.body = append([]position{newHead}, g.body...)
 			*positionValue = 1
-			g.PlaceApple()
-			g.UpdateHighScore()
+			g.placeApple()
+			g.updatehighScore()
 		}
 	}
 }
 
-func (g *Game) RandomEmpty() (y, x int) {
+func (g *Game) randomEmpty() (y, x int) {
 	var coords [][2]int
-	for y, row := range g.Board {
+	for y, row := range g.board {
 		for x, value := range row {
 			if value == 0 {
 				coords = append(coords, [2]int{y, x})
@@ -78,32 +70,32 @@ func (g *Game) RandomEmpty() (y, x int) {
 	
 	if len(coords) == 0 {
 		// end game
-		g.Status = false
+		g.status = false
 	}
 
 	c := coords[rand.Intn(len(coords))]
 	return c[0], c[1]
 }
 
-func (g *Game) PlaceApple() {
-	y, x := g.RandomEmpty()
-	g.Board[y][x] = 2
+func (g *Game) placeApple() {
+	y, x := g.randomEmpty()
+	g.board[y][x] = 2
 }
 
-func (g *Game) UpdateHighScore() {
-	if g.HighScore < uint(len(g.Body)-1) {
-		g.HighScore = uint(len(g.Body)-1)
+func (g *Game) updatehighScore() {
+	if g.highScore < uint(len(g.body)-1) {
+		g.highScore = uint(len(g.body)-1)
 	}
 }
 
 func (g *Game) Setup() {
-	g.Board = make([][]uint8, g.Cfg.GridSquaresHeight)
-	for y := range g.Board {
-		g.Board[y] = make([]uint8, g.Cfg.GridSquaresWidth)
+	g.board = make([][]uint8, g.Cfg.GridSquaresHeight)
+	for y := range g.board {
+		g.board[y] = make([]uint8, g.Cfg.GridSquaresWidth)
 	}
-	startY, startX := g.RandomEmpty()
-	g.Body = []Position{Position{X: float32(startX), Y: float32(startY)}}
-	g.Board[startY][startX] = 1
-	g.PlaceApple()
-	g.Status = true
+	startY, startX := g.randomEmpty()
+	g.body = []position{position{X: float32(startX), Y: float32(startY)}}
+	g.board[startY][startX] = 1
+	g.placeApple()
+	g.status = true
 }
