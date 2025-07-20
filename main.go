@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font/basicfont"
 )
 
 const (
@@ -96,7 +99,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.White)
+	screen.Fill(color.Black)
 	for y, col := range g.Board {
 		for x, value := range col {
 			if ViewGrid {
@@ -106,6 +109,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+	text.Draw(screen, "Score: " + fmt.Sprint(len(g.Body)-1), basicfont.Face7x13, SquareSize, SquareSize, color.White)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
