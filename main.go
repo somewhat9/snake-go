@@ -133,6 +133,15 @@ func (g *Game) PlaceApple() {
 	g.Board[y][x] = 2
 }
 
+func (g *Game) Setup() {
+	g.Board = [GridSquaresHeight][GridSquaresWidth]uint8{}
+	startY, startX := g.RandomEmpty()
+	g.Body = []Position{Position{X: float32(startX), Y: float32(startY)}}
+	g.Board[startY][startX] = 1
+	g.PlaceApple()
+	g.Status = true
+}
+
 type Position struct {
 	X, Y float32
 }
@@ -140,13 +149,13 @@ type Position struct {
 func (g *Game) Update() error {
 	if g.Status {
 		switch {
-		case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
+		case ebiten.IsKeyPressed(ebiten.KeyArrowUp) && g.Dir.Y == 0:
 			g.Dir = Position{X: 0, Y: -1}
-		case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
+		case ebiten.IsKeyPressed(ebiten.KeyArrowDown) && g.Dir.Y == 0:
 			g.Dir = Position{X: 0, Y: 1}
-		case ebiten.IsKeyPressed(ebiten.KeyArrowRight):
+		case ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.Dir.X == 0:
 			g.Dir = Position{X: 1, Y: 0}
-		case ebiten.IsKeyPressed(ebiten.KeyArrowLeft):
+		case ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && g.Dir.X == 0:
 			g.Dir = Position{X: -1, Y: 0}
 		}
 
@@ -154,6 +163,10 @@ func (g *Game) Update() error {
 		if now.Sub(g.LastTick) >= time.Second/4 {
 			g.LastTick = now
 			g.Tick()
+		}
+	} else {
+		if ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyR) {
+			g.Setup()
 		}
 	}
 
