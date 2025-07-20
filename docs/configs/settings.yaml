@@ -1,0 +1,9 @@
+# Grid settings
+view_grid: false
+square_size: 30            # size of a square
+grid_squares_width: 40     # amount of squares per row
+grid_squares_height: 30    # amount of squares per column
+
+
+# Text settings
+font_size: 36
