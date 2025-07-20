@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -62,6 +63,7 @@ type Game struct{
 	Snake
 	Board [GridSquaresHeight][GridSquaresWidth]uint8
 	LastTick time.Time
+	Status bool
 }
 
 type Snake struct{
@@ -71,29 +73,51 @@ type Snake struct{
 
 func (g *Game) Tick() {
 	head := g.Body[0]
-	newHead := Position{X: head.X + g.Dir.X, Y: head.Y + g.Dir.Y}
+	if !(g.Dir.X == 0 && g.Dir.Y == 0) {
+		newHead := Position{X: head.X + g.Dir.X, Y: head.Y + g.Dir.Y}
 
-	/* Debug Prints
-	fmt.Print(newHead)
-	fmt.Print(" ")
-	fmt.Print(head)
-	fmt.Print(" ")
-	fmt.Println(g.Board[int(newHead.Y)][int(newHead.X)])
-	*/
+		/* Debug Prints
+		fmt.Print(newHead)
+		fmt.Print(" ")
+		fmt.Print(head)
+		fmt.Print(" ")
+		fmt.Println(g.Board[int(newHead.Y)][int(newHead.X)])
+		*/
 
-	switch g.Board[int(newHead.Y)][int(newHead.X)] {
-	case 0:
-		g.Body = append([]Position{newHead}, g.Body...)
-		tail := g.Body[len(g.Body)-1]
-		g.Body = g.Body[:len(g.Body)-1]
-		g.Board[int(newHead.Y)][int(newHead.X)] = 1
-		g.Board[int(tail.Y)][int(tail.X)] = 0
-	case 1:
-		// end game
-	case 2:
-		g.Body = append([]Position{newHead}, g.Body...)
-		g.Board[int(newHead.Y)][int(newHead.X)] = 1
+		switch g.Board[int(newHead.Y)][int(newHead.X)] {
+		case 0:
+			g.Body = append([]Position{newHead}, g.Body...)
+			tail := g.Body[len(g.Body)-1]
+			g.Body = g.Body[:len(g.Body)-1]
+			g.Board[int(newHead.Y)][int(newHead.X)] = 1
+			g.Board[int(tail.Y)][int(tail.X)] = 0
+		case 1:
+			// end game
+			g.Status = false
+		case 2:
+			g.Body = append([]Position{newHead}, g.Body...)
+			g.Board[int(newHead.Y)][int(newHead.X)] = 1
+		}
 	}
+}
+
+func (g *Game) RandomEmpty() (y, x int) {
+	var coords [][2]int
+	for y, row := range g.Board {
+		for x, value := range row {
+			if value == 0 {
+				coords = append(coords, [2]int{y, x})
+			}
+		}
+	}
+	
+	if len(coords) == 0 {
+		// end game
+		g.Status = false
+	}
+
+	c := coords[rand.Intn(len(coords))]
+	return c[0], c[1]
 }
 
 type Position struct {
@@ -101,21 +125,23 @@ type Position struct {
 }
 
 func (g *Game) Update() error {
-	switch {
-	case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
-		g.Dir = Position{X: 0, Y: -1}
-	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
-		g.Dir = Position{X: 0, Y: 1}
-	case ebiten.IsKeyPressed(ebiten.KeyArrowRight):
-		g.Dir = Position{X: 1, Y: 0}
-	case ebiten.IsKeyPressed(ebiten.KeyArrowLeft):
-		g.Dir = Position{X: -1, Y: 0}
-	}
+	if g.Status {
+		switch {
+		case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
+			g.Dir = Position{X: 0, Y: -1}
+		case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
+			g.Dir = Position{X: 0, Y: 1}
+		case ebiten.IsKeyPressed(ebiten.KeyArrowRight):
+			g.Dir = Position{X: 1, Y: 0}
+		case ebiten.IsKeyPressed(ebiten.KeyArrowLeft):
+			g.Dir = Position{X: -1, Y: 0}
+		}
 
-	now := time.Now()
-	if now.Sub(g.LastTick) >= time.Second/4 {
-		g.LastTick = now
-		g.Tick()
+		now := time.Now()
+		if now.Sub(g.LastTick) >= time.Second/4 {
+			g.LastTick = now
+			g.Tick()
+		}
 	}
 
 	return nil 
@@ -133,6 +159,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 	text.Draw(screen, "Score: " + fmt.Sprint(len(g.Body)-1), fontFace, SquareSize, SquareSize*1.5, color.White)
+	if !g.Status {
+		message := "GAME OVER!"
+		bounds := text.BoundString(fontFace, message)
+		text.Draw(screen, message, fontFace, (ScreenWidth-bounds.Dx())/2, (ScreenHeight-bounds.Dy())/2, color.White)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -140,12 +171,16 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	game := &Game{}
 	ebiten.SetWindowSize(ScreenWidth, ScreenHeight)
 	ebiten.SetWindowTitle("Snake")
 	fontFace = loadFont()
-	game.Body = append(game.Body, Position{X: GridWidth/SquareSize/2, Y: GridHeight/SquareSize/2})
-	game.Board[GridHeight/SquareSize/2][GridWidth/SquareSize/2] = 1
+
+	startY, startX := game.RandomEmpty()
+	game.Body = append(game.Body, Position{X: float32(startX), Y: float32(startY)})
+	game.Board[startY][startX] = 1
+	game.Status = true	
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
