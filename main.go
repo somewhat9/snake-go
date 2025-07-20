@@ -64,6 +64,7 @@ type Game struct{
 	Board [GridSquaresHeight][GridSquaresWidth]uint8
 	LastTick time.Time
 	Status bool
+	HighScore uint
 }
 
 type Snake struct{
@@ -105,6 +106,7 @@ func (g *Game) Tick() {
 			g.Body = append([]Position{newHead}, g.Body...)
 			*positionValue = 1
 			g.PlaceApple()
+			g.UpdateHighScore()
 		}
 	}
 }
@@ -131,6 +133,12 @@ func (g *Game) RandomEmpty() (y, x int) {
 func (g *Game) PlaceApple() {
 	y, x := g.RandomEmpty()
 	g.Board[y][x] = 2
+}
+
+func (g *Game) UpdateHighScore() {
+	if g.HighScore < uint(len(g.Body)-1) {
+		g.HighScore = uint(len(g.Body)-1)
+	}
 }
 
 func (g *Game) Setup() {
@@ -184,7 +192,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
-	text.Draw(screen, "Score: " + fmt.Sprint(len(g.Body)-1), fontFace, SquareSize, SquareSize*1.5, color.White)
+	text.Draw(screen, "Score: " + fmt.Sprint(len(g.Body)-1) + "   High Score: " + fmt.Sprint(g.HighScore), fontFace, SquareSize, SquareSize*1.5, color.White)
 	if !g.Status {
 		message := "GAME OVER!"
 		bounds := text.BoundString(fontFace, message)
