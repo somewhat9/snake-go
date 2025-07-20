@@ -203,11 +203,7 @@ func main() {
 	ebiten.SetWindowTitle("Snake")
 	fontFace = loadFont()
 
-	startY, startX := game.RandomEmpty()
-	game.Body = append(game.Body, Position{X: float32(startX), Y: float32(startY)})
-	game.Board[startY][startX] = 1
-	game.PlaceApple()
-	game.Status = true	
+	game.Setup()
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
