@@ -75,28 +75,36 @@ func (g *Game) Tick() {
 	head := g.Body[0]
 	if !(g.Dir.X == 0 && g.Dir.Y == 0) {
 		newHead := Position{X: head.X + g.Dir.X, Y: head.Y + g.Dir.Y}
+		
+		if GridSquaresHeight <= newHead.Y || newHead.Y < 0 || GridSquaresWidth <= newHead.X || newHead.X < 0 {
+			g.Status = false
+			return
+		}
+
+		positionValue := &g.Board[int(newHead.Y)][int(newHead.X)]
 
 		/* Debug Prints
 		fmt.Print(newHead)
 		fmt.Print(" ")
 		fmt.Print(head)
 		fmt.Print(" ")
-		fmt.Println(g.Board[int(newHead.Y)][int(newHead.X)])
+		fmt.Println(positionValue)
 		*/
 
-		switch g.Board[int(newHead.Y)][int(newHead.X)] {
+		switch *positionValue {
 		case 0:
 			g.Body = append([]Position{newHead}, g.Body...)
 			tail := g.Body[len(g.Body)-1]
 			g.Body = g.Body[:len(g.Body)-1]
-			g.Board[int(newHead.Y)][int(newHead.X)] = 1
+			*positionValue = 1
 			g.Board[int(tail.Y)][int(tail.X)] = 0
 		case 1:
 			// end game
 			g.Status = false
 		case 2:
 			g.Body = append([]Position{newHead}, g.Body...)
-			g.Board[int(newHead.Y)][int(newHead.X)] = 1
+			*positionValue = 1
+			g.PlaceApple()
 		}
 	}
 }
@@ -118,6 +126,11 @@ func (g *Game) RandomEmpty() (y, x int) {
 
 	c := coords[rand.Intn(len(coords))]
 	return c[0], c[1]
+}
+
+func (g *Game) PlaceApple() {
+	y, x := g.RandomEmpty()
+	g.Board[y][x] = 2
 }
 
 type Position struct {
@@ -180,6 +193,7 @@ func main() {
 	startY, startX := game.RandomEmpty()
 	game.Body = append(game.Body, Position{X: float32(startX), Y: float32(startY)})
 	game.Board[startY][startX] = 1
+	game.PlaceApple()
 	game.Status = true	
 
 	if err := ebiten.RunGame(game); err != nil {
