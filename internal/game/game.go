@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/somewhat9/snake/internal/config"
+	"github.com/somewhat9/snake-go/internal/config"
 	"golang.org/x/image/font"
 )
 

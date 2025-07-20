@@ -7,7 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"github.com/somewhat9/snake/internal/config"
+	"github.com/somewhat9/snake-go/internal/config"
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {

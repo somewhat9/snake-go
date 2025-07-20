@@ -1,4 +1,4 @@
-module github.com/somewhat9/snake
+module github.com/somewhat9/snake-go
 
 go 1.24.4
 
