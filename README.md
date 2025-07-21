@@ -11,3 +11,46 @@
 - [x] WASM Compilation
 - [x] Customizable Settings in `settings.yaml`
 - [x] Hardware Acceleration
+
+## Prerequisites
+
+Before building make sure you have **Go** installed. 
+Install from [https://go.dev/dl](https://go.dev/dl).
+
+To verify that Go is installed:
+```bash
+go version
+```
+
+## Getting the Code
+
+Clone the repo and enter it's directory:
+```bash
+git clone https://github.com/somewhat9/snake-go.git
+cd snake-go
+```
+
+## Build
+
+Fetch dependencies:
+```bash
+go mod tidy
+```
+
+Compile:
+```bash
+go build -o bin/snake-go ./cmd/snake-go
+```
+
+## Run
+
+Run directly (without binary):
+```bash
+go run ./cmd/snake-go/main.go
+```
+
+Run from the built binary:
+```bash
+./bin/snake-go
+```
+
